@@ -19,6 +19,7 @@ class CapsLayer(object):
         self.batch_size = batch_size
 
     def __call__(self, input, kernel_size=None, stride=None):
+        # convolute
         if self.layer_type == 'CONV':
             self.kernel_size = kernel_size
             self.stride = stride
@@ -27,6 +28,7 @@ class CapsLayer(object):
                 capsules = tf.reshape(capsules, (-1, capsules.shape[1].value*capsules.shape[2].value*self.num_outputs, self.vec_len, 1))
                 capsules = self.squash(capsules)
                 return (capsules)
+        # transform primary capsule into senior capsule 
         if self.layer_type == 'FC':
             if self.with_routing:
                 self.input = tf.reshape(input, shape=(-1, input.shape[1].value, 1, input.shape[-2].value, 1))
@@ -35,7 +37,8 @@ class CapsLayer(object):
                     capsules = self.routing(self.input, b_IJ)
                     capsules = tf.squeeze(capsules, axis=1)
             return(capsules)
-
+    
+    # dynamic routing
     def routing(self, input, b_IJ):
         input_shape = input.get_shape()
         W = tf.get_variable('Weight', shape=(1, input_shape[1], self.num_outputs*self.vec_len, input_shape[3],input_shape[4]), dtype=tf.float32, initializer=tf.random_normal_initializer(stddev=0.01))
@@ -58,24 +61,29 @@ class CapsLayer(object):
                     u_produce_v = tf.matmul(u_hat_stopped, v_J_tiled, transpose_a=True)
                     b_IJ += u_produce_v
         return(v_J)
-
+    
+    # activation function squash
     def squash(self, vector):
         vec_squared_norm = tf.reduce_sum(tf.square(vector), -2, keep_dims=True)
         scalar_factor = vec_squared_norm / (1 + vec_squared_norm) / tf.sqrt(vec_squared_norm + self.epsilon)
         vec_squashed = scalar_factor * vector
         return(vec_squashed)
 
-
+# attention mechanism
 class SpatialAttention():
     def __init__(self, input_shape):
         self.w_tanh = self.weight_variable((1, input_shape[1].value, input_shape[2].value, input_shape[3].value))
         self.b_tanh = self.bias_variable((1, input_shape[1].value, input_shape[2].value, 1))
 
     def __call__(self, input):
+        # fuse channel information
         fc_first = tf.nn.tanh(tf.reduce_sum(tf.multiply(input, self.w_tanh), axis=3, keep_dims=True) + self.b_tanh)
+        # using overlapping pooling to get maximum and mean value of feature map (Dimension is M*M*1)
         spatial_attention_max = tf.nn.max_pool(fc_first, ksize=[1, 2, 2, 1], strides=[1, 1, 1, 1], padding='SAME')
         spatial_attention_mean = tf.nn.avg_pool(fc_first, ksize=[1, 2, 2, 1], strides=[1, 1, 1, 1], padding='SAME')
+        # concat maximum and mean value as [max,mean] (Dimension is M*M*2)
         spatial_attention_concat = tf.concat([spatial_attention_max, spatial_attention_mean], axis=3)
+        # squash the third dimensional as attention weight (Dimension is M*M*1)
         self.attention = tf.contrib.layers.conv2d(spatial_attention_concat, num_outputs=1, kernel_size=5, stride=1, padding='SAME', activation_fn=tf.nn.sigmoid)
         output = tf.multiply(input, self.attention)
         return output
@@ -161,12 +169,14 @@ class RunMain():
             allow_soft_placement=True, log_device_placement=False))
         self.sess.run(tf.global_variables_initializer())
 
+    # Two-dimensional discrete features(using Cartesian Product)
     def two_dimension_graph(self, feature):
         feature = feature.reshape((-1, self.image_size-1, self.channal))
         feature = feature.transpose(0, 2, 1)
         feature_graph = np.zeros((feature.shape[0], self.image_size, self.image_size, self.channal))
         for i in range(feature.shape[0]):
             for j in range(feature.shape[1]):
+                # Cartesian Product
                 single_use = np.hstack((feature[i, j, :], 1)).reshape(-1, self.image_size)
                 single_graph = self.sigmoid(0.5*np.sqrt(single_use.T*single_use))
                 feature_graph[i, :, :, j] = single_graph
@@ -245,6 +255,7 @@ class RunMain():
         print('test accuracy = {:3.6f}'.format(accuracy))
         return accuracy
 
+    # scramble training sample order
     def random_mini_batches(self, mini_batch_size=64, seed=0):
         X = self.trainData
         Y = self.trainFlag

@@ -9,6 +9,12 @@ class ImportMatData():
         self.interval = 50
         self.channal = 16
 
+    '''
+    A file contains 10000*16 dimensional data
+    10000 is times
+    16 is channel number
+    using window analyse to split as 300*16 
+    '''
     def load_data(self,data_class):
         if data_class == "person":
             self.path = '../all_data_wrist/'
@@ -168,7 +174,3 @@ class DealSign(object):
             Data.append(Data_feature)
         Data = np.array(Data).reshape((-1,self.feature*self.channal))
         return Data
-
-if __name__ == "__main__":
-    data_import = DealSign()
-    data = data_import.readFile("person")
