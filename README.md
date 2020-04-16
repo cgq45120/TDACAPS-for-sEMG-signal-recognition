@@ -19,10 +19,9 @@ Article published in Applied intelligence<br>
 |      +--001-001-005.mat<br>
 and more<br>
 +--all_data_wrist_people<br>
-|      +--comp_predict_table.csv<br>
 |      +--001-001-001.mat<br>
 |      +--001-001-002.mat<br>
 |      +--001-001-003.mat<br>
 |      +--001-001-004.mat<br>
 |      +--001-001-005.mat<br>
-and more
+and more<br>
