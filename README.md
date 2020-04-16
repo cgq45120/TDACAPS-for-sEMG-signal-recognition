@@ -1,10 +1,9 @@
 # TDACAPS-for-sEMG-signal-recognition
-A new model includes Two-dimensional discrete features and Spatial Attention CapsNet
-<br>
-Full title:Two-Dimensional Discrete Feature Based Spatial Attention CapsNet For sEMG Signal Recognition
-<br>
-Article published in Applied intelligence
-<br>
+A new model includes Two-dimensional discrete features and Spatial Attention CapsNet<br>
+
+Full title:Two-Dimensional Discrete Feature Based Spatial Attention CapsNet For sEMG Signal Recognition<br>
+
+Article published in Applied intelligence<br>
 
 
 
@@ -18,7 +17,7 @@ Article published in Applied intelligence
 |      +--001-001-003.mat<br>
 |      +--001-001-004.mat<br>
 |      +--001-001-005.mat<br>
-and more
+and more<br>
 +--all_data_wrist_people<br>
 |      +--comp_predict_table.csv<br>
 |      +--001-001-001.mat<br>
